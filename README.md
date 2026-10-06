@@ -9,7 +9,6 @@
 Turn any video, song or image into your desktop wallpaper — on Windows 10/11 and Linux.
 
 [![Release](https://img.shields.io/github/v/release/fromhumantohorse/rustpaper?style=flat-square&color=7b74ff)](https://github.com/fromhumantohorse/rustpaper/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/fromhumantohorse/rustpaper/ci.yml?style=flat-square&label=CI)](https://github.com/fromhumantohorse/rustpaper/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-4f8bff?style=flat-square)](LICENSE)
 ![Rust](https://img.shields.io/badge/rust-1.89%2B-a05cff?style=flat-square&logo=rust)
 ![Platforms](https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-34d399?style=flat-square)
