@@ -97,6 +97,8 @@ pub fn text(key: Key) -> &'static str {
         Key::RenderQualityDesc => "«Rendimiento» usa filtros de escalado ligeros.",
         Key::HardwareDecoding => "Decodificación por hardware",
         Key::HardwareDecodingDesc => "Decodifica el vídeo en la GPU: mucha menos CPU y RAM.",
+        Key::OptimizeVideos => "Optimizar vídeos automáticamente",
+        Key::OptimizeVideosDesc => "Crea una copia ligera a la resolución de cada pantalla: hasta 4× menos GPU, VRAM y RAM.",
         Key::CardEnergy => "Ahorro de energía",
         Key::CardEnergyDesc => "Qué hacer cuando el fondo no está visible.",
         Key::AppFocused => "Aplicación en primer plano",

@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 
 use libmpv2::Mpv;
-use rustpaper_application::ports::{Renderer, RendererFactory, SurfaceHandle};
+use rustpaper_application::ports::{Presentation, Renderer, RendererFactory, SurfaceHandle};
 use rustpaper_application::AppError;
 use rustpaper_domain::settings::EngineSettings;
-use rustpaper_domain::wallpaper::Wallpaper;
 
 use super::mpv_properties::{
-    effective_mute, hardware_decoding, visualizer_graph, wallpaper_properties, PropertyValue,
-    STARTUP_OPTIONS,
+    effective_mute, hardware_decoding, visualizer_graph, wallpaper_properties, PlaybackContext,
+    PropertyValue, STARTUP_OPTIONS,
 };
 
 pub(super) fn renderer_error(error: libmpv2::Error) -> AppError {
@@ -25,7 +24,7 @@ impl RendererFactory for MpvRendererFactory {
     ) -> Result<Box<dyn Renderer>, AppError> {
         let mpv = Mpv::with_initializer(|init| {
             init.set_property("wid", surface.0)?;
-            init.set_property("hwdec", hardware_decoding(engine))?;
+            init.set_property("hwdec", hardware_decoding(engine, false))?;
             STARTUP_OPTIONS
                 .iter()
                 .try_for_each(|(name, value)| init.set_property(name, *value))
@@ -64,16 +63,23 @@ impl MpvRenderer {
 }
 
 impl Renderer for MpvRenderer {
-    fn load(&mut self, wallpaper: &Wallpaper, engine: &EngineSettings) -> Result<(), AppError> {
-        let path = wallpaper.source().path();
+    fn load(
+        &mut self,
+        presentation: &Presentation<'_>,
+        engine: &EngineSettings,
+    ) -> Result<(), AppError> {
+        let path = presentation.media;
         if !path.is_absolute() {
             return Err(AppError::Renderer(format!(
                 "chemin refusé : {}",
                 path.display()
             )));
         }
-        if let Err(error) = self.configure(wallpaper, engine) {
-            log::warn!("réglage partiel de « {} » : {error}", wallpaper.title());
+        if let Err(error) = self.configure(presentation, engine) {
+            log::warn!(
+                "réglage partiel de « {} » : {error}",
+                presentation.wallpaper.title()
+            );
         }
         let path = path.to_string_lossy();
         self.mpv
@@ -83,15 +89,21 @@ impl Renderer for MpvRenderer {
 
     fn configure(
         &mut self,
-        wallpaper: &Wallpaper,
+        presentation: &Presentation<'_>,
         engine: &EngineSettings,
     ) -> Result<(), AppError> {
         self.is_engine_muted = engine.is_muted;
+        let wallpaper = presentation.wallpaper;
         let graph = (
             "lavfi-complex",
             PropertyValue::Text(visualizer_graph(wallpaper)),
         );
-        let properties = wallpaper_properties(wallpaper, engine, self.is_occlusion_muted);
+        let context = PlaybackContext {
+            engine,
+            is_occlusion_muted: self.is_occlusion_muted,
+            is_optimized: presentation.is_optimized,
+        };
+        let properties = wallpaper_properties(wallpaper, &context);
         let mut first_error = None;
         for (name, value) in std::iter::once(graph).chain(properties) {
             if let Err(error) = self.set(name, value) {

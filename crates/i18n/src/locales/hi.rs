@@ -97,6 +97,10 @@ pub fn text(key: Key) -> &'static str {
         Key::RenderQualityDesc => "“प्रदर्शन” हल्के स्केलिंग फ़िल्टर इस्तेमाल करता है।",
         Key::HardwareDecoding => "हार्डवेयर डिकोडिंग",
         Key::HardwareDecodingDesc => "वीडियो GPU पर डिकोड होता है: बहुत कम CPU और RAM।",
+        Key::OptimizeVideos => "वीडियो अपने-आप ऑप्टिमाइज़ करें",
+        Key::OptimizeVideosDesc => {
+            "हर स्क्रीन के रेज़ोल्यूशन पर हल्की कॉपी बनाता है: GPU, VRAM और RAM का उपयोग 4× तक कम।"
+        }
         Key::CardEnergy => "ऊर्जा बचत",
         Key::CardEnergyDesc => "जब वॉलपेपर दिखाई न दे तो क्या करें।",
         Key::AppFocused => "ऐप सामने है",

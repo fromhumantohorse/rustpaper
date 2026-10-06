@@ -7,8 +7,15 @@ use std::process::ExitCode;
 use rustpaper_infrastructure::logging;
 use rustpaper_infrastructure::paths::AppPaths;
 use rustpaper_infrastructure::platform::prepare_process;
+use rustpaper_infrastructure::rendering::{run_job_argument, OPTIMIZE_ARGUMENT};
 
 fn main() -> ExitCode {
+    let arguments: Vec<String> = std::env::args().collect();
+    if let [_, flag, job] = arguments.as_slice() {
+        if flag == OPTIMIZE_ARGUMENT {
+            return optimize(job);
+        }
+    }
     let paths = match AppPaths::resolve() {
         Ok(paths) => paths,
         Err(error) => {
@@ -19,6 +26,19 @@ fn main() -> ExitCode {
     logging::init(&paths.log_file("daemon"));
     prepare_process();
     match runtime::run(&paths) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(error) => {
+            log::error!("{error}");
+            ExitCode::FAILURE
+        }
+    }
+}
+
+fn optimize(job: &str) -> ExitCode {
+    if let Ok(paths) = AppPaths::resolve() {
+        logging::init(&paths.log_file("optimizer"));
+    }
+    match run_job_argument(job) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             log::error!("{error}");

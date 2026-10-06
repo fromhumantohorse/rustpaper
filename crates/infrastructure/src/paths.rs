@@ -43,6 +43,10 @@ impl AppPaths {
         self.cache_dir.join("thumbnails")
     }
 
+    pub fn optimized_dir(&self) -> PathBuf {
+        self.cache_dir.join("optimized")
+    }
+
     pub fn log_file(&self, component: &str) -> PathBuf {
         self.cache_dir.join("logs").join(format!("{component}.log"))
     }

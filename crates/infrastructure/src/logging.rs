@@ -15,4 +15,7 @@ pub fn init(log_file: &Path) {
         builder.target(Target::Pipe(Box::new(file)));
     }
     builder.init();
+    std::panic::set_hook(Box::new(|panic| {
+        log::error!("arrêt inattendu : {panic}");
+    }));
 }

@@ -1,8 +1,8 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use rustpaper_domain::display::{Foreground, Monitor, MonitorId};
 use rustpaper_domain::settings::EngineSettings;
-use rustpaper_domain::wallpaper::Wallpaper;
+use rustpaper_domain::wallpaper::{Scaling, Wallpaper};
 use rustpaper_domain::Library;
 
 use crate::AppError;
@@ -33,10 +33,24 @@ pub trait DesktopSurface {
     fn is_alive(&self, monitor: &MonitorId) -> bool;
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Presentation<'a> {
+    pub wallpaper: &'a Wallpaper,
+    pub media: &'a Path,
+    pub is_optimized: bool,
+}
+
 pub trait Renderer {
-    fn load(&mut self, wallpaper: &Wallpaper, engine: &EngineSettings) -> Result<(), AppError>;
-    fn configure(&mut self, wallpaper: &Wallpaper, engine: &EngineSettings)
-        -> Result<(), AppError>;
+    fn load(
+        &mut self,
+        presentation: &Presentation<'_>,
+        engine: &EngineSettings,
+    ) -> Result<(), AppError>;
+    fn configure(
+        &mut self,
+        presentation: &Presentation<'_>,
+        engine: &EngineSettings,
+    ) -> Result<(), AppError>;
     fn set_paused(&mut self, is_paused: bool) -> Result<(), AppError>;
     fn set_occlusion_muted(&mut self, is_muted: bool) -> Result<(), AppError>;
 }
@@ -47,6 +61,20 @@ pub trait RendererFactory {
         surface: SurfaceHandle,
         engine: &EngineSettings,
     ) -> Result<Box<dyn Renderer>, AppError>;
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct OptimizationRequest {
+    pub source: PathBuf,
+    pub width: u32,
+    pub height: u32,
+    pub scaling: Scaling,
+    pub fps_limit: Option<u16>,
+}
+
+pub trait MediaOptimizer {
+    fn resolve(&self, request: &OptimizationRequest) -> Option<PathBuf>;
+    fn has_new_results(&self) -> bool;
 }
 
 pub trait ThumbnailRenderer: Send {

@@ -105,6 +105,8 @@ pub fn text(key: Key) -> &'static str {
         Key::HardwareDecodingDesc => {
             "Décode la vidéo sur le GPU : beaucoup moins de CPU et de RAM."
         }
+        Key::OptimizeVideos => "Optimiser les vidéos automatiquement",
+        Key::OptimizeVideosDesc => "Crée une copie légère à la résolution de chaque écran : jusqu'à 4× moins de GPU, de VRAM et de RAM.",
         Key::CardEnergy => "Économie d'énergie",
         Key::CardEnergyDesc => "Que faire quand le fond d'écran n'est pas visible.",
         Key::AppFocused => "Application au premier plan",

@@ -3168,7 +3168,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-application"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "rustpaper-domain",
  "thiserror 1.0.69",
@@ -3176,7 +3176,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-daemon"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "embed-resource",
  "fastrand",
@@ -3189,7 +3189,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-domain"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -3198,7 +3198,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-i18n"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -3206,7 +3206,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-infrastructure"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "directories",
  "env_logger",
@@ -3227,7 +3227,7 @@ dependencies = [
 
 [[package]]
 name = "rustpaper-studio"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "ar-reshaper",
  "eframe",

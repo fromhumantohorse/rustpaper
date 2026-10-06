@@ -1,21 +1,27 @@
 use std::collections::btree_map::Entry;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 use std::time::Instant;
 
 use rustpaper_domain::display::{Foreground, Monitor, MonitorId};
 use rustpaper_domain::settings::{EngineSettings, Environment, PlaybackPolicy};
-use rustpaper_domain::wallpaper::{Wallpaper, WallpaperId};
+use rustpaper_domain::wallpaper::{MediaKind, Scaling, Wallpaper, WallpaperId};
+use rustpaper_domain::Bounded;
 use rustpaper_domain::Library;
 
 use super::playlist_rotation::PlaylistRotation;
 use super::screen::{PlaybackState, Screen};
-use crate::ports::{DesktopSurface, DisplayProvider, RendererFactory};
+use crate::ports::{
+    DesktopSurface, DisplayProvider, MediaOptimizer, OptimizationRequest, Presentation,
+    RendererFactory,
+};
 use crate::AppError;
 
 pub struct EngineDeps {
     pub displays: Box<dyn DisplayProvider>,
     pub surface: Box<dyn DesktopSurface>,
     pub renderers: Box<dyn RendererFactory>,
+    pub optimizer: Box<dyn MediaOptimizer>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -62,7 +68,23 @@ impl WallpaperEngine {
             };
             first_error = first_error.or(outcome.err());
         }
+        self.prepare_playlist(library, &monitors);
         first_error.map_or(Ok(()), Err)
+    }
+
+    fn prepare_playlist(&self, library: &Library, monitors: &[Monitor]) {
+        if !library.settings().playlist.is_enabled {
+            return;
+        }
+        for wallpaper in library
+            .playlist()
+            .iter()
+            .filter_map(|id| library.wallpaper(*id))
+        {
+            for monitor in monitors {
+                self.optimized_media(monitor, wallpaper, library.settings());
+            }
+        }
     }
 
     pub fn react_to(
@@ -146,6 +168,7 @@ impl WallpaperEngine {
         if is_outdated {
             self.release(&monitor.id);
         }
+        let optimized = self.optimized_media(monitor, wallpaper, settings);
         let screen = match self.screens.entry(monitor.id.clone()) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
@@ -159,7 +182,43 @@ impl WallpaperEngine {
                 }
             }
         };
-        screen.present(wallpaper, settings)
+        screen.present(
+            &Presentation {
+                wallpaper,
+                media: optimized.as_deref().unwrap_or(wallpaper.source().path()),
+                is_optimized: optimized.is_some(),
+            },
+            settings,
+        )
+    }
+
+    pub fn refresh_optimized(&mut self, library: &Library) -> Result<(), AppError> {
+        if self.deps.optimizer.has_new_results() {
+            return self.sync(library);
+        }
+        Ok(())
+    }
+
+    fn optimized_media(
+        &self,
+        monitor: &Monitor,
+        wallpaper: &Wallpaper,
+        settings: &EngineSettings,
+    ) -> Option<PathBuf> {
+        let scaling = wallpaper.settings().scaling;
+        let is_eligible = settings.is_optimizing_videos
+            && wallpaper.kind() == MediaKind::Video
+            && scaling != Scaling::Center;
+        if !is_eligible {
+            return None;
+        }
+        self.deps.optimizer.resolve(&OptimizationRequest {
+            source: wallpaper.source().path().to_path_buf(),
+            width: monitor.bounds.width,
+            height: monitor.bounds.height,
+            scaling,
+            fps_limit: settings.fps_limit.map(Bounded::get),
+        })
     }
 
     fn release_stale(&mut self, monitors: &[Monitor]) {

@@ -4,11 +4,14 @@ use std::rc::Rc;
 
 use rustpaper_domain::display::{Foreground, Monitor, MonitorId, Occlusion, Rect};
 use rustpaper_domain::settings::EngineSettings;
-use rustpaper_domain::wallpaper::{MediaSource, Wallpaper};
+use rustpaper_domain::wallpaper::MediaSource;
 use rustpaper_domain::Library;
 
 use super::{EngineDeps, UserOverrides, WallpaperEngine};
-use crate::ports::{DesktopSurface, DisplayProvider, Renderer, RendererFactory, SurfaceHandle};
+use crate::ports::{
+    DesktopSurface, DisplayProvider, MediaOptimizer, OptimizationRequest, Presentation, Renderer,
+    RendererFactory, SurfaceHandle,
+};
 use crate::AppError;
 
 type Journal = Rc<RefCell<Vec<String>>>;
@@ -50,17 +53,19 @@ impl DesktopSurface for FakeSurface {
 struct FakeRenderer(Journal);
 
 impl Renderer for FakeRenderer {
-    fn load(&mut self, wallpaper: &Wallpaper, _: &EngineSettings) -> Result<(), AppError> {
-        self.0
-            .borrow_mut()
-            .push(format!("load {}", wallpaper.title()));
+    fn load(&mut self, shown: &Presentation<'_>, _: &EngineSettings) -> Result<(), AppError> {
+        self.0.borrow_mut().push(format!(
+            "load {} {}",
+            shown.wallpaper.title(),
+            shown.media.display()
+        ));
         Ok(())
     }
 
-    fn configure(&mut self, wallpaper: &Wallpaper, _: &EngineSettings) -> Result<(), AppError> {
+    fn configure(&mut self, shown: &Presentation<'_>, _: &EngineSettings) -> Result<(), AppError> {
         self.0
             .borrow_mut()
-            .push(format!("configure {}", wallpaper.title()));
+            .push(format!("configure {}", shown.wallpaper.title()));
         Ok(())
     }
 
@@ -82,14 +87,36 @@ impl RendererFactory for FakeRenderers {
     }
 }
 
-fn engine_with_journal() -> (WallpaperEngine, Journal) {
+#[derive(Clone, Default)]
+struct FakeOptimizer {
+    ready: Rc<RefCell<Option<PathBuf>>>,
+    requests: Rc<RefCell<Vec<OptimizationRequest>>>,
+}
+
+impl MediaOptimizer for FakeOptimizer {
+    fn resolve(&self, request: &OptimizationRequest) -> Option<PathBuf> {
+        self.requests.borrow_mut().push(request.clone());
+        self.ready.borrow().clone()
+    }
+
+    fn has_new_results(&self) -> bool {
+        self.ready.borrow().is_some()
+    }
+}
+
+fn engine_with_optimizer(optimizer: FakeOptimizer) -> (WallpaperEngine, Journal) {
     let journal = Journal::default();
     let deps = EngineDeps {
         displays: Box::new(FakeDisplays),
         surface: Box::new(FakeSurface(journal.clone())),
         renderers: Box::new(FakeRenderers(journal.clone())),
+        optimizer: Box::new(optimizer),
     };
     (WallpaperEngine::new(deps, |_| 0), journal)
+}
+
+fn engine_with_journal() -> (WallpaperEngine, Journal) {
+    engine_with_optimizer(FakeOptimizer::default())
 }
 
 fn library_with_assignment() -> Library {
@@ -210,4 +237,65 @@ fn unassigned_monitor_is_released() {
     engine.sync(&library).unwrap();
 
     assert_eq!(entries(&journal, "detach"), 1);
+}
+
+#[test]
+fn switches_to_the_optimized_copy_once_it_is_ready() {
+    let optimizer = FakeOptimizer::default();
+    let (mut engine, journal) = engine_with_optimizer(optimizer.clone());
+    let library = library_with_assignment();
+    engine.sync(&library).unwrap();
+    assert_eq!(entries(&journal, "load ocean ocean.mp4"), 1);
+
+    *optimizer.ready.borrow_mut() = Some(PathBuf::from("ocean-1920x1080.mp4"));
+    engine.refresh_optimized(&library).unwrap();
+
+    assert_eq!(entries(&journal, "load ocean ocean-1920x1080.mp4"), 1);
+    let request = optimizer.requests.borrow()[0].clone();
+    assert_eq!((request.width, request.height), (1920, 1080));
+}
+
+#[test]
+fn optimization_can_be_disabled() {
+    let optimizer = FakeOptimizer::default();
+    let (mut engine, _) = engine_with_optimizer(optimizer.clone());
+    let mut library = library_with_assignment();
+    let mut settings = *library.settings();
+    settings.is_optimizing_videos = false;
+    library.configure_engine(settings);
+
+    engine.sync(&library).unwrap();
+
+    assert!(optimizer.requests.borrow().is_empty());
+}
+
+#[test]
+fn playlist_items_are_optimized_ahead_of_time() {
+    let optimizer = FakeOptimizer::default();
+    let (mut engine, _) = engine_with_optimizer(optimizer.clone());
+    let mut library = library_with_assignment();
+    let next = library
+        .import(MediaSource::from_path(PathBuf::from("forest.mp4")).unwrap())
+        .unwrap();
+    library.toggle_in_playlist(next).unwrap();
+    let mut settings = *library.settings();
+    settings.playlist.is_enabled = false;
+    library.configure_engine(settings);
+
+    engine.sync(&library).unwrap();
+    let is_ignored_while_disabled = optimizer
+        .requests
+        .borrow()
+        .iter()
+        .all(|request| !request.source.ends_with("forest.mp4"));
+    settings.playlist.is_enabled = true;
+    library.configure_engine(settings);
+    engine.sync(&library).unwrap();
+
+    assert!(is_ignored_while_disabled);
+    assert!(optimizer
+        .requests
+        .borrow()
+        .iter()
+        .any(|request| request.source.ends_with("forest.mp4")));
 }

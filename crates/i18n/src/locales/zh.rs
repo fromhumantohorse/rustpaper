@@ -97,6 +97,10 @@ pub fn text(key: Key) -> &'static str {
         Key::RenderQualityDesc => "“性能”模式使用轻量缩放滤镜。",
         Key::HardwareDecoding => "硬件解码",
         Key::HardwareDecodingDesc => "在 GPU 上解码视频：大幅降低 CPU 和内存占用。",
+        Key::OptimizeVideos => "自动优化视频",
+        Key::OptimizeVideosDesc => {
+            "按每个屏幕的分辨率生成轻量副本：GPU、显存和内存占用最多降低 4 倍。"
+        }
         Key::CardEnergy => "节能",
         Key::CardEnergyDesc => "壁纸不可见时的处理方式。",
         Key::AppFocused => "应用位于前台",

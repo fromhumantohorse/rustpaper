@@ -1,8 +1,10 @@
+use std::path::{Path, PathBuf};
+
 use rustpaper_domain::display::Rect;
 use rustpaper_domain::settings::EngineSettings;
 use rustpaper_domain::wallpaper::{Wallpaper, WallpaperId};
 
-use crate::ports::Renderer;
+use crate::ports::{Presentation, Renderer};
 use crate::AppError;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
@@ -11,10 +13,15 @@ pub(super) struct PlaybackState {
     pub is_muted: bool,
 }
 
+struct Shown {
+    wallpaper: Wallpaper,
+    media: PathBuf,
+}
+
 pub(super) struct Screen {
     bounds: Rect,
     renderer: Box<dyn Renderer>,
-    shown: Option<Wallpaper>,
+    shown: Option<Shown>,
     applied: Option<EngineSettings>,
     playback: PlaybackState,
 }
@@ -35,7 +42,7 @@ impl Screen {
     }
 
     pub(super) fn shown_id(&self) -> Option<WallpaperId> {
-        self.shown.as_ref().map(Wallpaper::id)
+        self.shown.as_ref().map(|shown| shown.wallpaper.id())
     }
 
     pub(super) fn is_paused(&self) -> bool {
@@ -44,20 +51,29 @@ impl Screen {
 
     pub(super) fn present(
         &mut self,
-        wallpaper: &Wallpaper,
+        presentation: &Presentation<'_>,
         engine: &EngineSettings,
     ) -> Result<(), AppError> {
+        let wallpaper = presentation.wallpaper;
         let is_same_media = self.shown.as_ref().is_some_and(|shown| {
-            shown.id() == wallpaper.id() && shown.source() == wallpaper.source()
+            shown.wallpaper.id() == wallpaper.id() && shown.media == presentation.media
         });
+        let is_configured = self
+            .shown
+            .as_ref()
+            .is_some_and(|shown| &shown.wallpaper == wallpaper)
+            && self.applied.as_ref() == Some(engine);
         if !is_same_media {
-            self.renderer.load(wallpaper, engine)?;
-        } else if self.shown.as_ref() != Some(wallpaper) || self.applied.as_ref() != Some(engine) {
-            self.renderer.configure(wallpaper, engine)?;
+            self.renderer.load(presentation, engine)?;
+        } else if !is_configured {
+            self.renderer.configure(presentation, engine)?;
         } else {
             return Ok(());
         }
-        self.shown = Some(wallpaper.clone());
+        self.shown = Some(Shown {
+            wallpaper: wallpaper.clone(),
+            media: Path::to_path_buf(presentation.media),
+        });
         self.applied = Some(*engine);
         Ok(())
     }

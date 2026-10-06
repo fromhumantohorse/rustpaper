@@ -97,6 +97,8 @@ pub fn text(key: Key) -> &'static str {
         Key::RenderQualityDesc => "“Performance” uses lightweight scaling filters.",
         Key::HardwareDecoding => "Hardware decoding",
         Key::HardwareDecodingDesc => "Decodes video on the GPU: far less CPU and RAM.",
+        Key::OptimizeVideos => "Optimize videos automatically",
+        Key::OptimizeVideosDesc => "Creates a lightweight copy at each screen's resolution: up to 4× less GPU, VRAM and RAM.",
         Key::CardEnergy => "Power saving",
         Key::CardEnergyDesc => "What to do when the wallpaper is not visible.",
         Key::AppFocused => "App in the foreground",

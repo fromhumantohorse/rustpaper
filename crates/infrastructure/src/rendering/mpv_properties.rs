@@ -1,10 +1,13 @@
 use rustpaper_domain::settings::{EngineSettings, RenderQuality};
+use rustpaper_domain::values::ColorLevel;
 use rustpaper_domain::wallpaper::{MediaKind, Scaling, Visualizer, Wallpaper};
 use rustpaper_domain::Bounded;
 
 const VISUALIZER_SIZE: &str = "1920x1080";
 const VISUALIZER_COLOR: &str = "0x8b7bff";
 const PERCENT: f64 = 100.0;
+const SINGLE_DECODER_THREAD: i64 = 1;
+const AUTOMATIC_DECODER_THREADS: i64 = 0;
 
 pub const STARTUP_OPTIONS: &[(&str, &str)] = &[
     ("config", "no"),
@@ -29,7 +32,10 @@ pub const STARTUP_OPTIONS: &[(&str, &str)] = &[
     ("demuxer-max-bytes", "8MiB"),
     ("demuxer-max-back-bytes", "0"),
     ("demuxer-readahead-secs", "1"),
-    ("vd-lavc-threads", "4"),
+    ("vo", "gpu-next"),
+    ("gpu-api", "auto"),
+    ("swapchain-depth", "1"),
+    ("hdr-compute-peak", "no"),
     ("gpu-shader-cache", "yes"),
 ];
 
@@ -43,8 +49,15 @@ pub enum PropertyValue {
 
 pub type Property = (&'static str, PropertyValue);
 
-pub fn hardware_decoding(engine: &EngineSettings) -> &'static str {
-    if engine.is_hardware_decoding {
+#[derive(Debug, Clone, Copy)]
+pub struct PlaybackContext<'a> {
+    pub engine: &'a EngineSettings,
+    pub is_occlusion_muted: bool,
+    pub is_optimized: bool,
+}
+
+pub fn hardware_decoding(engine: &EngineSettings, is_optimized: bool) -> &'static str {
+    if engine.is_hardware_decoding && !is_optimized {
         "auto-safe"
     } else {
         "no"
@@ -69,40 +82,39 @@ pub fn visualizer_graph(wallpaper: &Wallpaper) -> String {
     format!("[aid1]asplit[ao][viz];[viz]{filter}[vo]")
 }
 
-pub fn wallpaper_properties(
-    wallpaper: &Wallpaper,
-    engine: &EngineSettings,
-    is_occlusion_muted: bool,
-) -> Vec<Property> {
+pub fn wallpaper_properties(wallpaper: &Wallpaper, context: &PlaybackContext<'_>) -> Vec<Property> {
+    let engine = context.engine;
     let settings = wallpaper.settings();
     let volume = effective_volume(wallpaper, engine);
     let color = settings.color;
-    let level = |value: rustpaper_domain::values::ColorLevel| {
-        PropertyValue::Integer(i64::from(value.get()))
+    let level = |value: ColorLevel| PropertyValue::Integer(i64::from(value.get()));
+    let text = |value: &str| PropertyValue::Text(value.into());
+    let decoder_threads = if context.is_optimized {
+        SINGLE_DECODER_THREAD
+    } else {
+        AUTOMATIC_DECODER_THREADS
     };
+    let fps_filter = if context.is_optimized {
+        String::new()
+    } else {
+        fps_filter(engine)
+    };
+    let mute = effective_mute(engine.is_muted, context.is_occlusion_muted);
     let mut properties = vec![
         ("volume", PropertyValue::Real(volume)),
-        (
-            "mute",
-            PropertyValue::Flag(effective_mute(engine.is_muted, is_occlusion_muted)),
-        ),
-        (
-            "aid",
-            PropertyValue::Text(audio_track(wallpaper, engine, volume).into()),
-        ),
+        ("mute", PropertyValue::Flag(mute)),
+        ("aid", text(audio_track(wallpaper, engine, volume))),
         (
             "speed",
             PropertyValue::Real(f64::from(settings.speed.get())),
         ),
-        (
-            "loop-file",
-            PropertyValue::Text(loop_mode(settings.is_looping).into()),
-        ),
+        ("loop-file", text(loop_mode(settings.is_looping))),
         (
             "hwdec",
-            PropertyValue::Text(hardware_decoding(engine).into()),
+            text(hardware_decoding(engine, context.is_optimized)),
         ),
-        ("vf", PropertyValue::Text(fps_filter(engine))),
+        ("vd-lavc-threads", PropertyValue::Integer(decoder_threads)),
+        ("vf", PropertyValue::Text(fps_filter)),
         ("brightness", level(color.brightness)),
         ("contrast", level(color.contrast)),
         ("saturation", level(color.saturation)),
@@ -155,27 +167,51 @@ fn scaling_properties(scaling: Scaling) -> [Property; 3] {
     ]
 }
 
-fn quality_properties(quality: RenderQuality) -> [Property; 5] {
-    let (scale, downscale, chroma, is_debanded, is_dithered) = match quality {
-        RenderQuality::Performance => ("bilinear", "bilinear", "bilinear", false, false),
-        RenderQuality::Balanced => ("spline36", "mitchell", "spline36", false, true),
-        RenderQuality::Quality => (
-            "ewa_lanczossharp",
-            "mitchell",
-            "ewa_lanczossharp",
-            true,
-            true,
-        ),
+struct QualityProfile {
+    scale: &'static str,
+    downscale: &'static str,
+    chroma: &'static str,
+    is_high_quality: bool,
+}
+
+fn quality_properties(quality: RenderQuality) -> [Property; 8] {
+    let profile = match quality {
+        RenderQuality::Performance => QualityProfile {
+            scale: "bilinear",
+            downscale: "bilinear",
+            chroma: "bilinear",
+            is_high_quality: false,
+        },
+        RenderQuality::Balanced => QualityProfile {
+            scale: "spline36",
+            downscale: "hermite",
+            chroma: "bilinear",
+            is_high_quality: false,
+        },
+        RenderQuality::Quality => QualityProfile {
+            scale: "ewa_lanczossharp",
+            downscale: "mitchell",
+            chroma: "spline36",
+            is_high_quality: true,
+        },
     };
     let text = |value: &str| PropertyValue::Text(value.into());
+    let flag = PropertyValue::Flag(profile.is_high_quality);
     [
-        ("scale", text(scale)),
-        ("dscale", text(downscale)),
-        ("cscale", text(chroma)),
-        ("deband", PropertyValue::Flag(is_debanded)),
+        ("scale", text(profile.scale)),
+        ("dscale", text(profile.downscale)),
+        ("cscale", text(profile.chroma)),
+        ("deband", flag.clone()),
+        ("correct-downscaling", flag.clone()),
+        ("linear-downscaling", flag.clone()),
+        ("sigmoid-upscaling", flag),
         (
             "dither-depth",
-            text(if is_dithered { "auto" } else { "no" }),
+            text(if profile.is_high_quality {
+                "auto"
+            } else {
+                "no"
+            }),
         ),
     ]
 }
@@ -198,6 +234,16 @@ mod tests {
         library.wallpaper(id).unwrap().clone()
     }
 
+    fn properties(file: &str, engine: &EngineSettings, context: (bool, bool)) -> Vec<Property> {
+        let (is_occlusion_muted, is_optimized) = context;
+        let context = PlaybackContext {
+            engine,
+            is_occlusion_muted,
+            is_optimized,
+        };
+        wallpaper_properties(&wallpaper(file), &context)
+    }
+
     fn value_of(properties: &[Property], name: &str) -> PropertyValue {
         properties
             .iter()
@@ -213,14 +259,13 @@ mod tests {
             master_volume: Volume::try_new(50).unwrap(),
             ..EngineSettings::default()
         };
-        let properties = wallpaper_properties(&wallpaper("a.mp4"), &engine, false);
+        let properties = properties("a.mp4", &engine, (false, false));
         assert_eq!(value_of(&properties, "volume"), PropertyValue::Real(40.0));
     }
 
     #[test]
     fn occlusion_mute_overrides_engine_mute() {
-        let properties =
-            wallpaper_properties(&wallpaper("a.mp4"), &EngineSettings::default(), true);
+        let properties = properties("a.mp4", &EngineSettings::default(), (true, false));
         assert_eq!(value_of(&properties, "mute"), PropertyValue::Flag(true));
     }
 
@@ -230,10 +275,49 @@ mod tests {
             is_muted: true,
             ..EngineSettings::default()
         };
-        let video = wallpaper_properties(&wallpaper("a.mp4"), &engine, false);
-        let audio = wallpaper_properties(&wallpaper("a.mp3"), &engine, false);
+        let video = properties("a.mp4", &engine, (false, false));
+        let audio = properties("a.mp3", &engine, (false, false));
         assert_eq!(value_of(&video, "aid"), PropertyValue::Text("no".into()));
         assert_eq!(value_of(&audio, "aid"), PropertyValue::Text("auto".into()));
+    }
+
+    #[test]
+    fn optimized_copies_use_a_single_software_decoder_without_filters() {
+        let engine = EngineSettings {
+            fps_limit: Some(rustpaper_domain::values::FpsLimit::default()),
+            ..EngineSettings::default()
+        };
+        let optimized = properties("a.mp4", &engine, (false, true));
+        let original = properties("a.mp4", &engine, (false, false));
+        assert_eq!(
+            value_of(&optimized, "hwdec"),
+            PropertyValue::Text("no".into())
+        );
+        assert_eq!(
+            value_of(&optimized, "vf"),
+            PropertyValue::Text(String::new())
+        );
+        assert_eq!(
+            value_of(&optimized, "vd-lavc-threads"),
+            PropertyValue::Integer(1)
+        );
+        assert_eq!(
+            value_of(&original, "hwdec"),
+            PropertyValue::Text("auto-safe".into())
+        );
+    }
+
+    #[test]
+    fn default_quality_avoids_expensive_scalers() {
+        let properties = properties("a.mp4", &EngineSettings::default(), (false, false));
+        assert_eq!(
+            value_of(&properties, "correct-downscaling"),
+            PropertyValue::Flag(false)
+        );
+        assert_eq!(
+            value_of(&properties, "dither-depth"),
+            PropertyValue::Text("no".into())
+        );
     }
 
     #[test]

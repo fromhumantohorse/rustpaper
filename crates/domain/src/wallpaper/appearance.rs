@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::values::ColorLevel;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum Scaling {
     #[default]
     Fill,

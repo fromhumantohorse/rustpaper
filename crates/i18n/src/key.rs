@@ -30,7 +30,7 @@ keys! {
     SettingsTitle, SettingsSubtitle, CardLanguage, CardLanguageDesc, CardAudio, CardAudioDesc,
     MasterVolume, MasterVolumeDesc, MuteAll, CardPerformance, CardPerformanceDesc, LimitFps,
     LimitFpsDesc, FramesPerSecond, RenderQuality, RenderQualityDesc, HardwareDecoding,
-    HardwareDecodingDesc, CardEnergy, CardEnergyDesc, AppFocused, AppMaximized, AppFullscreen,
+    HardwareDecodingDesc, OptimizeVideos, OptimizeVideosDesc, CardEnergy, CardEnergyDesc, AppFocused, AppMaximized, AppFullscreen,
     OnlyThisScreen, OnBattery, OnBatteryDesc, CardPlaylist, CardPlaylistDesc, AutoRotation,
     Interval, Order, CardSystem, CardSystemDesc, Autostart, AutostartDesc, RenderEngine,
     EngineRunning, EngineHalted, StopEngine, StartEngine, UnitMinutes, UnitMegabytes,

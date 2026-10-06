@@ -127,6 +127,10 @@ fn performance(ui: &mut Ui, t: &Translator, settings: &mut EngineSettings) -> bo
         is_changed |= setting_row(ui, quality, |ui| {
             segmented(ui, &mut settings.quality, &qualities)
         });
+        let optimizing = texts(t, Key::OptimizeVideos, Some(Key::OptimizeVideosDesc));
+        is_changed |= setting_row(ui, optimizing, |ui| {
+            toggle(ui, &mut settings.is_optimizing_videos).changed()
+        });
         let decoding = texts(t, Key::HardwareDecoding, Some(Key::HardwareDecodingDesc));
         is_changed
             | setting_row(ui, decoding, |ui| {

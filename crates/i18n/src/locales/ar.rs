@@ -99,6 +99,10 @@ pub fn text(key: Key) -> &'static str {
         Key::HardwareDecodingDesc => {
             "يفك ترميز الفيديو على وحدة الرسوميات: معالج وذاكرة أقل بكثير."
         }
+        Key::OptimizeVideos => "تحسين الفيديوهات تلقائيًا",
+        Key::OptimizeVideosDesc => {
+            "ينشئ نسخة خفيفة بدقة كل شاشة: استهلاك أقل حتى 4 مرات للمعالج الرسومي والذاكرة."
+        }
         Key::CardEnergy => "توفير الطاقة",
         Key::CardEnergyDesc => "ماذا يحدث عندما لا تكون الخلفية ظاهرة.",
         Key::AppFocused => "تطبيق في الواجهة",

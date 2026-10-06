@@ -99,6 +99,10 @@ pub fn text(key: Key) -> &'static str {
         Key::RenderQualityDesc => "«Скорость» использует лёгкие фильтры масштабирования.",
         Key::HardwareDecoding => "Аппаратное декодирование",
         Key::HardwareDecodingDesc => "Декодирование на GPU: гораздо меньше CPU и RAM.",
+        Key::OptimizeVideos => "Автоматически оптимизировать видео",
+        Key::OptimizeVideosDesc => {
+            "Создаёт лёгкую копию в разрешении каждого экрана: до 4× меньше GPU, видеопамяти и RAM."
+        }
         Key::CardEnergy => "Энергосбережение",
         Key::CardEnergyDesc => "Что делать, когда обои не видны.",
         Key::AppFocused => "Приложение на переднем плане",

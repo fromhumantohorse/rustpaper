@@ -29,7 +29,7 @@ Turn any video, song or image into your desktop wallpaper — on Windows 10/11 a
 | 🖱️ **Drag & drop** | Drop files — or whole folders — onto the window. Thumbnails are generated automatically. |
 | 🖥️ **Multi-monitor** | One wallpaper per screen or the same everywhere. Hot-plugging is handled. |
 | 🎛️ **Per-wallpaper tuning** | Volume, speed, loop, fill / fit / stretch / center, brightness, contrast, saturation, gamma |
-| ⚡ **Ultra-light** | Hardware decoding, FPS limiter, render-quality presets, tiny demuxer cache. The engine idles at **~15 MB of RAM**. |
+| ⚡ **Ultra-light** | Videos are automatically re-encoded once to each screen's exact resolution: a 4K wallpaper on two monitors uses **~3 % GPU, ~115 MB VRAM and ~0.6 % CPU**. FPS limiter, render-quality presets, tiny demuxer cache; the engine idles at **~15 MB of RAM** when paused. |
 | 🔋 **Smart pausing** | Pause or mute when an app is focused, maximized or fullscreen — **per monitor** — or when running on battery. Memory is released while paused. |
 | 🔀 **Playlists** | Sequential or shuffled rotation with a custom interval |
 | 🔔 **System integration** | Notification-area icon, launch at startup, single instance, theme-colored title bar |

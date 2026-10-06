@@ -14,7 +14,7 @@ use rustpaper_infrastructure::platform::{
     NativeOcclusionProbe, NativePower, SystemTray, TrayAction, TrayLabels,
 };
 use rustpaper_infrastructure::preferences::PreferencesStore;
-use rustpaper_infrastructure::rendering::MpvRendererFactory;
+use rustpaper_infrastructure::rendering::{MpvMediaOptimizer, MpvRendererFactory};
 
 const TICK: Duration = Duration::from_millis(100);
 const DISPLAY_REFRESH: Duration = Duration::from_secs(5);
@@ -63,6 +63,10 @@ impl Daemon {
                 displays: Box::new(NativeDisplays::connect()?),
                 surface: Box::new(NativeDesktopSurface::connect()?),
                 renderers: Box::new(MpvRendererFactory),
+                optimizer: Box::new(MpvMediaOptimizer::spawn(
+                    paths.optimized_dir(),
+                    std::env::current_exe().map_err(platform_error)?,
+                )),
             },
             |len| fastrand::usize(..len),
         );
@@ -139,6 +143,7 @@ impl Daemon {
                 .react_to(&foreground, self.is_on_battery, self.library.settings()),
         );
         report(self.engine.advance_playlist(now, &self.library));
+        report(self.engine.refresh_optimized(&self.library));
         self.trim_when_idle();
     }
 
