@@ -1,0 +1,21 @@
+[package]
+name = "rustpaper-daemon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+build = "../../assets/windows/build.rs"
+
+[dependencies]
+rustpaper-domain.workspace = true
+rustpaper-application.workspace = true
+rustpaper-infrastructure.workspace = true
+rustpaper-i18n.workspace = true
+log.workspace = true
+fastrand.workspace = true
+
+[build-dependencies]
+embed-resource.workspace = true
+
+[lints]
+workspace = true

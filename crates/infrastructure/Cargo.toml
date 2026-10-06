@@ -1,0 +1,30 @@
+[package]
+name = "rustpaper-infrastructure"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+rustpaper-domain.workspace = true
+rustpaper-application.workspace = true
+rustpaper-i18n.workspace = true
+sys-locale.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+directories.workspace = true
+libmpv2.workspace = true
+log.workspace = true
+env_logger.workspace = true
+getrandom.workspace = true
+png.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows.workspace = true
+tray-icon.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb.workspace = true
+
+[lints]
+workspace = true

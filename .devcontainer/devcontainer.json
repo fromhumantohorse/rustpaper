@@ -1,0 +1,13 @@
+{
+  "name": "rustpaper",
+  "build": { "dockerfile": "Containerfile" },
+  "runArgs": ["--userns=keep-id"],
+  "containerUser": "vscode",
+  "updateRemoteUserUID": true,
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer"],
+      "settings": { "dev.containers.dockerPath": "podman" }
+    }
+  }
+}
