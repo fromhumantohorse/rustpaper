@@ -6,6 +6,7 @@ use rustpaper_application::AppError;
 pub const APP_NAME: &str = "Rustpaper";
 pub const DAEMON_BINARY: &str = "rustpaper-daemon";
 pub const STUDIO_BINARY: &str = "rustpaper-studio";
+pub const UPDATER_BINARY: &str = "rustpaper-updater";
 const LIBRARY_FILE: &str = "library.json";
 
 #[derive(Debug, Clone)]
@@ -41,6 +42,10 @@ impl AppPaths {
 
     pub fn thumbnails_dir(&self) -> PathBuf {
         self.cache_dir.join("thumbnails")
+    }
+
+    pub fn updates_dir(&self) -> PathBuf {
+        self.cache_dir.join("updates")
     }
 
     pub fn optimized_dir(&self) -> PathBuf {

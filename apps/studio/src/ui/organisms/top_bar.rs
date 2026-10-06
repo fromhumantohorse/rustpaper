@@ -39,21 +39,22 @@ pub fn top_bar(ui: &mut Ui, view: &StudioView<'_>) -> Vec<Intent> {
 }
 
 fn playback_buttons(ui: &mut Ui, view: &StudioView<'_>) -> Vec<Intent> {
-    let Some(engine) = view.engine else {
-        return Vec::new();
-    };
     let mut intents = Vec::new();
-    let (mute_icon, mute_tip) = if engine.is_muted {
+    let is_silent = view.is_silent();
+    let (sound_icon, sound_tip) = if is_silent {
         (icon::SPEAKER_SLASH, Key::UnmuteSound)
     } else {
         (icon::SPEAKER_HIGH, Key::MuteSound)
     };
-    if icon_button(ui, mute_icon, view.t.get(mute_tip), engine.is_muted).clicked() {
-        intents.push(Intent::SetPlayback {
-            is_paused: engine.is_paused,
-            is_muted: !engine.is_muted,
+    if icon_button(ui, sound_icon, view.t.get(sound_tip), is_silent).clicked() {
+        intents.push(Intent::SetSound {
+            is_audible: is_silent,
+            is_paused: view.engine.is_some_and(|engine| engine.is_paused),
         });
     }
+    let Some(engine) = view.engine else {
+        return intents;
+    };
     let (pause_icon, pause_tip) = if engine.is_paused {
         (icon::PLAY, Key::ResumePlayback)
     } else {

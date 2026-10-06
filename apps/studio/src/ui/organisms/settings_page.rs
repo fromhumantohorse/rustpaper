@@ -5,6 +5,7 @@ use rustpaper_domain::settings::{
 };
 use rustpaper_domain::values::FpsLimit;
 use rustpaper_i18n::{Key, Language};
+use rustpaper_infrastructure::control::EngineStatus;
 
 use crate::i18n::{display, Translator};
 use crate::model::Intent;
@@ -49,8 +50,7 @@ pub fn settings_page(ui: &mut Ui, view: &StudioView<'_>) -> Vec<Intent> {
                     ui.add_space(SPACE_M);
                     is_changed |= playlist(ui, t, &mut settings.playlist);
                     ui.add_space(SPACE_M);
-                    let (system_changed, engine_intent) =
-                        system(ui, t, &mut settings, view.engine.is_some());
+                    let (system_changed, engine_intent) = system(ui, t, &mut settings, view.engine);
                     intents.extend(engine_intent);
                     if is_changed || system_changed {
                         intents.push(Intent::ConfigureEngine(settings));
@@ -198,13 +198,18 @@ fn system(
     ui: &mut Ui,
     t: &Translator,
     settings: &mut EngineSettings,
-    is_running: bool,
+    engine: Option<&EngineStatus>,
 ) -> (bool, Option<Intent>) {
+    let is_running = engine.is_some();
     let card = header(t, icon::GEAR_SIX, Key::CardSystem, Key::CardSystemDesc);
     settings_card(ui, &card, |ui| {
         let autostart = texts(t, Key::Autostart, Some(Key::AutostartDesc));
-        let is_changed = setting_row(ui, autostart, |ui| {
+        let mut is_changed = setting_row(ui, autostart, |ui| {
             toggle(ui, &mut settings.is_autostart).changed()
+        });
+        let update_state = update_description(t, engine);
+        is_changed |= setting_row(ui, (t.get(Key::AutoUpdate), &update_state), |ui| {
+            toggle(ui, &mut settings.is_auto_updating).changed()
         });
         let state = if is_running {
             Key::EngineRunning
@@ -235,4 +240,17 @@ fn system(
         });
         (is_changed, intent)
     })
+}
+
+fn update_description(t: &Translator, engine: Option<&EngineStatus>) -> String {
+    let Some(engine) = engine else {
+        return t.get(Key::AutoUpdateDesc).to_owned();
+    };
+    if !engine.is_updatable {
+        return t.get(Key::UpdatePortable).to_owned();
+    }
+    match &engine.pending_update {
+        Some(version) => t.format(Key::UpdateReady, &[version]),
+        None => t.format(Key::VersionUpToDate, &[&engine.version]),
+    }
 }

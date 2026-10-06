@@ -7,3 +7,4 @@ pub mod persistence;
 pub mod platform;
 pub mod preferences;
 pub mod rendering;
+pub mod updates;

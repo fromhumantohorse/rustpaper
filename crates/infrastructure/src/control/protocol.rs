@@ -9,6 +9,7 @@ pub enum Command {
     Stop,
     SetOverrides { is_paused: bool, is_muted: bool },
     Focus,
+    OpenSettings,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -24,12 +25,18 @@ pub struct ScreenReport {
     pub is_paused: bool,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct EngineStatus {
     pub memory_bytes: u64,
+    pub gpu_percent: Option<f32>,
+    pub vram_bytes: Option<u64>,
     pub is_paused: bool,
     pub is_muted: bool,
     pub screens: Vec<ScreenReport>,
+    pub version: String,
+    pub pending_update: Option<String>,
+    pub is_updatable: bool,
 }
 
 pub(super) fn tokens_match(expected: &str, received: &str) -> bool {

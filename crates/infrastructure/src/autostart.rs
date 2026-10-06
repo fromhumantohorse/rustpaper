@@ -13,29 +13,49 @@ pub fn set_autostart(is_enabled: bool, executable: &Path) -> io::Result<()> {
 mod native {
     use std::io;
     use std::path::Path;
-    use std::process::Command;
+
+    use windows::core::HSTRING;
+    use windows::Win32::Foundation::ERROR_FILE_NOT_FOUND;
+    use windows::Win32::System::Registry::{
+        RegDeleteKeyValueW, RegSetKeyValueW, HKEY_CURRENT_USER, REG_SZ,
+    };
 
     use crate::paths::APP_NAME;
 
-    const RUN_KEY: &str = r"HKCU\Software\Microsoft\Windows\CurrentVersion\Run";
-
-    fn reg(args: &[&str]) -> io::Result<()> {
-        let status = Command::new("reg").args(args).status()?;
-        if status.success() {
-            return Ok(());
-        }
-        Err(io::Error::other(format!("reg a échoué : {status}")))
-    }
+    const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
 
     pub(super) fn enable(executable: &Path) -> io::Result<()> {
-        let command = format!("\"{}\"", executable.display());
-        reg(&[
-            "add", RUN_KEY, "/v", APP_NAME, "/t", "REG_SZ", "/d", &command, "/f",
-        ])
+        let command: Vec<u16> = format!("\"{}\"", executable.display())
+            .encode_utf16()
+            .chain([0])
+            .collect();
+        let size = u32::try_from(size_of_val(command.as_slice())).map_err(io::Error::other)?;
+        unsafe {
+            RegSetKeyValueW(
+                HKEY_CURRENT_USER,
+                &HSTRING::from(RUN_KEY),
+                &HSTRING::from(APP_NAME),
+                REG_SZ.0,
+                Some(command.as_ptr().cast()),
+                size,
+            )
+        }
+        .ok()
+        .map_err(io::Error::from)
     }
 
     pub(super) fn disable() -> io::Result<()> {
-        reg(&["delete", RUN_KEY, "/v", APP_NAME, "/f"])
+        let status = unsafe {
+            RegDeleteKeyValueW(
+                HKEY_CURRENT_USER,
+                &HSTRING::from(RUN_KEY),
+                &HSTRING::from(APP_NAME),
+            )
+        };
+        if status == ERROR_FILE_NOT_FOUND {
+            return Ok(());
+        }
+        status.ok().map_err(io::Error::from)
     }
 }
 

@@ -1,5 +1,6 @@
 use eframe::egui::{vec2, Align2, Color32, CursorIcon, Rect, Response, Sense, Stroke, Ui};
 
+use super::glow::paint_soft_shadow;
 use super::gradient::paint_gradient;
 use super::text::{icon_text, TextStyle};
 use crate::ui::theme::fonts::{icon, semibold};
@@ -13,6 +14,7 @@ const HORIZONTAL_PADDING: f32 = 16.0;
 const ICON_SIZE: f32 = 17.0;
 const LABEL_SIZE: f32 = 14.0;
 const HOVER_LIGHTEN: f32 = 0.12;
+const BUTTON_GLOW_OPACITY: f32 = 0.35;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ButtonLook {
@@ -45,6 +47,8 @@ pub fn button(ui: &mut Ui, look: ButtonLook, glyph: &str, label: &str) -> Respon
 fn paint_background(ui: &Ui, look: ButtonLook, rect: Rect, hover: f32) -> Color32 {
     match look {
         ButtonLook::Primary => {
+            let glow = ACCENT.gamma_multiply(BUTTON_GLOW_OPACITY * (0.6 + 0.4 * hover));
+            paint_soft_shadow(ui.painter(), rect, RADIUS, glow);
             let lighten = |color| mix(color, Color32::WHITE, hover * HOVER_LIGHTEN);
             paint_gradient(ui, rect, RADIUS, lighten(ACCENT_START), lighten(ACCENT_END));
             ON_ACCENT

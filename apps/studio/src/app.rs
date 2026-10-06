@@ -8,7 +8,7 @@ use rustpaper_infrastructure::paths::AppPaths;
 use rustpaper_infrastructure::rendering::MpvThumbnailer;
 
 use crate::controller::{SideEffect, StudioController};
-use crate::model::Intent;
+use crate::model::{Intent, Page};
 use crate::services::engine_link::EngineLink;
 use crate::services::system_fonts::load_script_fonts;
 use crate::services::thumbnails::Thumbnails;
@@ -54,12 +54,17 @@ impl StudioApp {
         }
     }
 
-    fn focus_when_requested(&self, ctx: &Context) {
+    fn focus_when_requested(&mut self, ctx: &Context) {
         let mut is_requested = false;
+        let mut opens_settings = false;
         self.instance.poll(|command| {
-            is_requested |= command == Command::Focus;
+            is_requested |= matches!(command, Command::Focus | Command::OpenSettings);
+            opens_settings |= command == Command::OpenSettings;
             None
         });
+        if opens_settings {
+            self.controller.page = Page::Settings;
+        }
         if is_requested {
             ctx.send_viewport_cmd(ViewportCommand::Minimized(false));
             ctx.send_viewport_cmd(ViewportCommand::Focus);
@@ -89,7 +94,7 @@ impl StudioApp {
             target: &controller.target,
             selected: controller.selected,
             engine: self.engine.status(),
-            memory_history: self.engine.memory_history(),
+            history: self.engine.history(),
             thumbnails: self.thumbnails.textures(),
             toasts: controller.toasts.visible(),
             app_icon: &self.app_icon,

@@ -7,10 +7,11 @@ pub enum PlaybackPolicy {
     KeepRunning,
     Mute,
     Pause,
+    Stop,
 }
 
 impl PlaybackPolicy {
-    pub const ALL: [Self; 3] = [Self::KeepRunning, Self::Mute, Self::Pause];
+    pub const ALL: [Self; 4] = [Self::KeepRunning, Self::Mute, Self::Pause, Self::Stop];
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -50,7 +51,7 @@ impl Default for PlaybackRules {
         Self {
             on_app_focused: PlaybackPolicy::KeepRunning,
             on_maximized: PlaybackPolicy::Pause,
-            on_fullscreen: PlaybackPolicy::Pause,
+            on_fullscreen: PlaybackPolicy::Stop,
             on_battery: PlaybackPolicy::Pause,
         }
     }
@@ -86,7 +87,7 @@ mod tests {
         let rules = PlaybackRules::default();
         assert_eq!(
             rules.policy_for(on(Occlusion::Fullscreen, false)),
-            PlaybackPolicy::Pause
+            PlaybackPolicy::Stop
         );
     }
 

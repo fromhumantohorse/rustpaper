@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.4.0 — Lighter, prettier, self-updating
+
+- **Silent updates**: the installed app checks GitHub releases in the background, verifies the installer's SHA-256 and installs it while the Studio is closed, then restarts the engine. No prompt, no admin rights; can be turned off in *Settings*. A failed install is not retried.
+- **Per-user installer**: installs to `%LOCALAPPDATA%\Programs\Rustpaper` without administrator rights. *Upgrading from v0.3.0: uninstall it first* (Windows cannot upgrade across install scopes); your library is kept.
+- **Less memory**: decoder threads are capped at 2 per screen (they were unbounded). Measured on two screens without hardware decoding: 1080p 395 → 222 MB RAM, raw 4K 1159 → 529 MB, with the same CPU usage.
+- **Stop policy**: fullscreen apps (games) now release the player entirely — RAM, VRAM and GPU drop back to idle — and playback resumes automatically. Available for every rule.
+- **GPU monitoring**: the Studio shows GPU usage and VRAM next to RAM, with a one-minute chart (RAM in blue, GPU in red).
+- **Redesign**: the active wallpaper becomes the backdrop of the hero card, ambient glows, a single sound button, visible slider tracks, simplified navigation (Library and Playlist only).
+- **Sound fix**: unmuting from the top bar now really restores sound (it also resets a master volume left at 0 %).
+- **New icon** (sharp at 16 px), and a *Settings* entry in the notification-area menu.
+- **Fix**: videos, images and music whose path contains a space (for example in a user name or a folder) failed to play, to get a thumbnail and to be optimized.
+- **Fix**: launch-at-startup now follows the app when it is moved or reinstalled elsewhere; it uses the registry API instead of spawning `reg.exe`.
+- Hardened updater: `msiexec` is resolved from `System32` only.
+
 ## v0.3.0 — Resource diet
 
 Measured on a real 2-monitor setup playing a 4K video (same settings before/after):

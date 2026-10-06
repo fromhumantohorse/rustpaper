@@ -40,6 +40,7 @@ pub struct ScreenStatus {
 pub struct WallpaperEngine {
     deps: EngineDeps,
     screens: BTreeMap<MonitorId, Screen>,
+    suspended: BTreeMap<MonitorId, Option<WallpaperId>>,
     rotation: PlaylistRotation,
     overrides: UserOverrides,
 }
@@ -49,6 +50,7 @@ impl WallpaperEngine {
         Self {
             deps,
             screens: BTreeMap::new(),
+            suspended: BTreeMap::new(),
             rotation: PlaylistRotation::new(pick_random),
             overrides: UserOverrides::default(),
         }
@@ -57,8 +59,13 @@ impl WallpaperEngine {
     pub fn sync(&mut self, library: &Library) -> Result<(), AppError> {
         let monitors = self.deps.displays.monitors()?;
         self.release_stale(&monitors);
+        self.suspended
+            .retain(|id, _| monitors.iter().any(|monitor| &monitor.id == id));
         let mut first_error = None;
         for monitor in &monitors {
+            if self.suspended.contains_key(&monitor.id) {
+                continue;
+            }
             let outcome = match self.wallpaper_for(library, &monitor.id) {
                 Some(wallpaper) => self.show(monitor, wallpaper, library.settings()),
                 None => {
@@ -91,22 +98,59 @@ impl WallpaperEngine {
         &mut self,
         foreground: &Foreground,
         is_on_battery: bool,
-        settings: &EngineSettings,
+        library: &Library,
     ) -> Result<(), AppError> {
-        let overrides = self.overrides;
+        let rules = library.settings().rules;
+        let monitors: Vec<MonitorId> = self
+            .screens
+            .keys()
+            .chain(self.suspended.keys())
+            .cloned()
+            .collect();
+        let mut is_resuming = false;
         let mut first_error = None;
-        for (monitor, screen) in &mut self.screens {
-            let policy = settings.rules.policy_for(Environment {
-                occlusion: foreground.occlusion_on(monitor),
+        for monitor in monitors {
+            let policy = rules.policy_for(Environment {
+                occlusion: foreground.occlusion_on(&monitor),
                 is_on_battery,
             });
-            let playback = PlaybackState {
-                is_paused: overrides.is_paused || policy == PlaybackPolicy::Pause,
-                is_muted: overrides.is_muted || policy == PlaybackPolicy::Mute,
-            };
-            first_error = first_error.or(screen.apply_playback(playback).err());
+            match (policy, self.suspended.contains_key(&monitor)) {
+                (PlaybackPolicy::Stop, true) => {}
+                (PlaybackPolicy::Stop, false) => self.suspend(&monitor),
+                (_, true) => {
+                    self.suspended.remove(&monitor);
+                    is_resuming = true;
+                }
+                (policy, false) => {
+                    first_error = first_error.or(self.apply_policy(&monitor, policy).err());
+                }
+            }
+        }
+        if is_resuming {
+            first_error = first_error.or(self.sync(library).err());
         }
         first_error.map_or(Ok(()), Err)
+    }
+
+    fn apply_policy(
+        &mut self,
+        monitor: &MonitorId,
+        policy: PlaybackPolicy,
+    ) -> Result<(), AppError> {
+        let overrides = self.overrides;
+        let Some(screen) = self.screens.get_mut(monitor) else {
+            return Ok(());
+        };
+        screen.apply_playback(PlaybackState {
+            is_paused: overrides.is_paused || policy == PlaybackPolicy::Pause,
+            is_muted: overrides.is_muted || policy == PlaybackPolicy::Mute,
+        })
+    }
+
+    fn suspend(&mut self, monitor: &MonitorId) {
+        let shown = self.screens.get(monitor).and_then(Screen::shown_id);
+        self.release(monitor);
+        self.suspended.insert(monitor.clone(), shown);
     }
 
     pub fn advance_playlist(&mut self, now: Instant, library: &Library) -> Result<(), AppError> {
@@ -125,7 +169,8 @@ impl WallpaperEngine {
     }
 
     pub fn is_idle(&self) -> bool {
-        !self.screens.is_empty() && self.screens.values().all(Screen::is_paused)
+        let has_screens = !self.screens.is_empty() || !self.suspended.is_empty();
+        has_screens && self.screens.values().all(Screen::is_paused)
     }
 
     pub fn screens(&self) -> Vec<ScreenStatus> {
@@ -136,6 +181,15 @@ impl WallpaperEngine {
                 wallpaper: screen.shown_id(),
                 is_paused: screen.is_paused(),
             })
+            .chain(
+                self.suspended
+                    .iter()
+                    .map(|(monitor, wallpaper)| ScreenStatus {
+                        monitor: monitor.clone(),
+                        wallpaper: *wallpaper,
+                        is_paused: true,
+                    }),
+            )
             .collect()
     }
 

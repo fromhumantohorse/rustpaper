@@ -13,11 +13,11 @@ macro_rules! keys {
 
 keys! {
     AppSubtitle,
-    NavLibrary, NavVideos, NavMusic, NavImages, NavPlaylist,
+    NavLibrary, NavPlaylist,
     SectionScreens, AllScreens, ScreensDetected, ScreenName, PrimaryScreen,
     EngineTitle, EngineActive, EngineStopped, PlaybackTitle, PlaybackPaused, PlaybackPlaying,
     SearchHint, Import, SettingsTooltip, MuteSound, UnmuteSound, PausePlayback, ResumePlayback,
-    NowPlaying, NothingPlaying, EngineMemory, LastMinute, EngineOff, ActiveScreens, Muted,
+    NowPlaying, NothingPlaying, LastMinute, EngineOff, ActiveScreens, Muted,
     PlaylistOn, PlaylistOff, NoResults, NoResultsHint, EmptyTitle, EmptyBody, ImportMedia,
     ImportShortcut,
     CardActive, AddToPlaylist, RemoveFromPlaylist, RemoveFromLibrary,
@@ -25,7 +25,7 @@ keys! {
     Customize, Close, Apply, Remove, Reset, SectionPlayback, Volume, Speed, Loop, Scaling,
     Visualizer, SectionColors, Brightness, Contrast, Saturation, Gamma,
     ScaleFill, ScaleFit, ScaleStretch, ScaleCenter, VisOff, VisWaves, VisSpectrum,
-    PolicyContinue, PolicyMute, PolicyPause, OrderSequential, OrderShuffle,
+    PolicyContinue, PolicyMute, PolicyPause, PolicyStop, OrderSequential, OrderShuffle,
     QualityPerformance, QualityBalanced, QualityHigh,
     SettingsTitle, SettingsSubtitle, CardLanguage, CardLanguageDesc, CardAudio, CardAudioDesc,
     MasterVolume, MasterVolumeDesc, MuteAll, CardPerformance, CardPerformanceDesc, LimitFps,
@@ -39,6 +39,7 @@ keys! {
     ToastEngineStarted, ToastEngineStopped, ToastImported, ToastImportedPartial, ToastNoScreen,
     ErrUnsupported, ErrMissing, ErrRange, ErrNotFound, ErrDuplicate, ErrStorage, ErrSystem,
     ErrRenderer,
-    TrayOpen, TrayPause, TrayMute, TrayQuit,
+    ResourcesTitle, MetricRam, MetricGpu, MetricVram, AutoUpdate, AutoUpdateDesc, VersionUpToDate, UpdateReady, UpdatePortable,
+    TrayOpen, TraySettings, TrayPause, TrayMute, TrayQuit,
     StartupFailed,
 }

@@ -7,7 +7,7 @@ const VISUALIZER_SIZE: &str = "1920x1080";
 const VISUALIZER_COLOR: &str = "0x8b7bff";
 const PERCENT: f64 = 100.0;
 const SINGLE_DECODER_THREAD: i64 = 1;
-const AUTOMATIC_DECODER_THREADS: i64 = 0;
+const SOURCE_DECODER_THREADS: i64 = 2;
 
 pub const STARTUP_OPTIONS: &[(&str, &str)] = &[
     ("config", "no"),
@@ -92,7 +92,7 @@ pub fn wallpaper_properties(wallpaper: &Wallpaper, context: &PlaybackContext<'_>
     let decoder_threads = if context.is_optimized {
         SINGLE_DECODER_THREAD
     } else {
-        AUTOMATIC_DECODER_THREADS
+        SOURCE_DECODER_THREADS
     };
     let fps_filter = if context.is_optimized {
         String::new()

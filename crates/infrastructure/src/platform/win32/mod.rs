@@ -1,6 +1,7 @@
 mod desktop_surface;
 mod displays;
 mod dpi;
+mod gpu;
 mod message_pump;
 mod monitor_info;
 mod occlusion;
@@ -13,6 +14,7 @@ mod window_chrome;
 pub use desktop_surface::WindowsDesktopSurface;
 pub use displays::WindowsDisplays;
 pub use dpi::prepare_process;
+pub use gpu::GpuMonitor;
 pub use message_pump::wait_for_events;
 pub use occlusion::WindowsOcclusionProbe;
 pub use power::WindowsPower;

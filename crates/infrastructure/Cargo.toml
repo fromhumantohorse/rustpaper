@@ -18,6 +18,8 @@ log.workspace = true
 env_logger.workspace = true
 getrandom.workspace = true
 png.workspace = true
+ureq.workspace = true
+sha2.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 windows.workspace = true

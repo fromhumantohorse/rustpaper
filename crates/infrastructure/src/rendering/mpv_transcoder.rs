@@ -8,7 +8,7 @@ use rustpaper_application::AppError;
 use rustpaper_domain::wallpaper::Scaling;
 use serde::{Deserialize, Serialize};
 
-use super::mpv_renderer::renderer_error;
+use super::mpv_renderer::{load_file, renderer_error};
 
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
 const PROBE_TIMEOUT: Duration = Duration::from_secs(15);
@@ -117,9 +117,7 @@ fn start(options: &[(&str, &str)], source: &Path) -> Result<Mpv, AppError> {
             .try_for_each(|(name, value)| init.set_property(name, *value))
     })
     .map_err(renderer_error)?;
-    let path = source.to_string_lossy();
-    mpv.command("loadfile", &[path.as_ref(), "replace"])
-        .map_err(renderer_error)?;
+    load_file(&mpv, source)?;
     Ok(mpv)
 }
 

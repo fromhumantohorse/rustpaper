@@ -8,7 +8,7 @@ NAME="Rustpaper-$VERSION-windows-x64"
 
 RUSTFLAGS='-L .cache/mpv' cargo build --release --target "$TARGET"
 mkdir -p dist "$OUT"
-cp "target/$TARGET/release/rustpaper-studio.exe" "target/$TARGET/release/rustpaper-daemon.exe" dist/
+cp "target/$TARGET/release/rustpaper-studio.exe" "target/$TARGET/release/rustpaper-daemon.exe" "target/$TARGET/release/rustpaper-updater.exe" dist/
 cp .cache/mpv/libmpv-2.dll dist/
 
 rm -rf "$OUT/Rustpaper" "$OUT/$NAME.zip" "$OUT/$NAME.msi"

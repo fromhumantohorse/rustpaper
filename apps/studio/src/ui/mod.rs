@@ -7,4 +7,4 @@ pub mod theme;
 mod view;
 
 pub use templates::studio_shell;
-pub use view::StudioView;
+pub use view::{ResourceHistory, StudioView, BYTES_PER_MEBIBYTE, HISTORY_LENGTH};

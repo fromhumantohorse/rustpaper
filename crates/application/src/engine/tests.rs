@@ -160,17 +160,16 @@ fn repeated_sync_is_idempotent() {
 #[test]
 fn fullscreen_app_pauses_playback_once() {
     let (mut engine, journal) = engine_with_journal();
-    let library = library_with_assignment();
+    let mut library = library_with_assignment();
+    let mut settings = *library.settings();
+    settings.rules.on_fullscreen = rustpaper_domain::settings::PlaybackPolicy::Pause;
+    library.configure_engine(settings);
     engine.sync(&library).unwrap();
 
     let foreground = foreground(Occlusion::Fullscreen, "DISPLAY1");
 
-    engine
-        .react_to(&foreground, false, library.settings())
-        .unwrap();
-    engine
-        .react_to(&foreground, false, library.settings())
-        .unwrap();
+    engine.react_to(&foreground, false, &library).unwrap();
+    engine.react_to(&foreground, false, &library).unwrap();
 
     assert_eq!(entries(&journal, "paused true"), 1);
 }
@@ -182,9 +181,7 @@ fn fullscreen_on_another_monitor_keeps_playing() {
     engine.sync(&library).unwrap();
 
     let foreground = foreground(Occlusion::Fullscreen, "DISPLAY2");
-    engine
-        .react_to(&foreground, false, library.settings())
-        .unwrap();
+    engine.react_to(&foreground, false, &library).unwrap();
 
     assert_eq!(entries(&journal, "paused true"), 0);
 }
@@ -200,7 +197,7 @@ fn user_pause_overrides_desktop_state() {
         is_muted: false,
     });
     engine
-        .react_to(&Foreground::DESKTOP, false, library.settings())
+        .react_to(&Foreground::DESKTOP, false, &library)
         .unwrap();
 
     assert_eq!(entries(&journal, "paused true"), 1);
@@ -214,7 +211,7 @@ fn battery_pauses_by_default() {
     engine.sync(&library).unwrap();
 
     engine
-        .react_to(&Foreground::DESKTOP, true, library.settings())
+        .react_to(&Foreground::DESKTOP, true, &library)
         .unwrap();
 
     assert_eq!(entries(&journal, "paused true"), 1);
@@ -298,4 +295,24 @@ fn playlist_items_are_optimized_ahead_of_time() {
         .borrow()
         .iter()
         .any(|request| request.source.ends_with("forest.mp4")));
+}
+
+#[test]
+fn stop_policy_releases_the_player_and_restores_it_on_the_desktop() {
+    let (mut engine, journal) = engine_with_journal();
+    let library = library_with_assignment();
+    engine.sync(&library).unwrap();
+
+    let game = foreground(Occlusion::Fullscreen, "DISPLAY1");
+    engine.react_to(&game, false, &library).unwrap();
+    engine.sync(&library).unwrap();
+    assert_eq!(entries(&journal, "detach"), 1);
+    assert!(engine.is_idle());
+    assert!(engine.screens().iter().all(|screen| screen.is_paused));
+
+    engine
+        .react_to(&Foreground::DESKTOP, false, &library)
+        .unwrap();
+    assert_eq!(entries(&journal, "attach"), 2);
+    assert_eq!(entries(&journal, "load ocean"), 2);
 }

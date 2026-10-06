@@ -23,6 +23,7 @@ pub enum Intent {
     Navigate(Page),
     SetLanguage(Language),
     SetPlayback { is_paused: bool, is_muted: bool },
+    SetSound { is_audible: bool, is_paused: bool },
     StartEngine,
     StopEngine,
 }

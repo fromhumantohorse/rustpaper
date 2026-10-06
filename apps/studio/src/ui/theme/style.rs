@@ -17,7 +17,7 @@ pub const SPACE_L: f32 = 16.0;
 pub const SPACE_XL: f32 = 24.0;
 pub const CONTROL_HEIGHT: f32 = 38.0;
 pub const PAGE_MARGIN: f32 = 20.0;
-pub const CONTROL_COLUMN: f32 = 340.0;
+pub const CONTROL_COLUMN: f32 = 420.0;
 pub const ANIMATION_SECONDS: f32 = 0.12;
 pub const HAIRLINE: f32 = 1.0;
 pub const EMPHASIS_STROKE: f32 = 1.5;
@@ -53,7 +53,10 @@ pub fn apply(ctx: &Context) {
         stroke: Stroke::new(HAIRLINE, TEXT),
     };
     visuals.widgets.noninteractive = widget(SURFACE, BORDER, TEXT_MUTED);
-    visuals.widgets.inactive = widget(SURFACE, BORDER, TEXT);
+    visuals.widgets.inactive = WidgetVisuals {
+        bg_fill: BORDER_STRONG,
+        ..widget(SURFACE, BORDER, TEXT)
+    };
     visuals.widgets.hovered = widget(SURFACE_HOVER, BORDER_STRONG, TEXT);
     visuals.widgets.active = widget(SURFACE_HOVER, ACCENT, TEXT);
     visuals.widgets.open = widget(SURFACE_HOVER, BORDER_STRONG, TEXT);

@@ -31,6 +31,18 @@ pub fn trim_memory() {}
 
 pub fn prepare_process() {}
 
+pub struct GpuMonitor;
+
+impl GpuMonitor {
+    pub fn for_current_process() -> Option<Self> {
+        None
+    }
+
+    pub fn sample(&mut self) -> Option<crate::platform::GpuUsage> {
+        None
+    }
+}
+
 pub fn theme_title_bar(_window: isize, _caption: [u8; 3], _border: [u8; 3], _text: [u8; 3]) {}
 
 pub struct SystemTray;

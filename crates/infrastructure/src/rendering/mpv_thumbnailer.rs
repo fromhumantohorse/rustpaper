@@ -7,7 +7,7 @@ use libmpv2::Mpv;
 use rustpaper_application::ports::ThumbnailRenderer;
 use rustpaper_application::AppError;
 
-use super::mpv_renderer::renderer_error;
+use super::mpv_renderer::{load_file, renderer_error};
 
 const POLL_INTERVAL: Duration = Duration::from_millis(40);
 const GIVE_UP_WITHOUT_VIDEO: Duration = Duration::from_secs(3);
@@ -64,9 +64,7 @@ fn capture_frame(source: &Path, staging: &Path) -> Result<PathBuf, AppError> {
         init.set_property("vo-image-outdir", staging.to_string_lossy().as_ref())
     })
     .map_err(renderer_error)?;
-    let path = source.to_string_lossy();
-    mpv.command("loadfile", &[path.as_ref(), "replace"])
-        .map_err(renderer_error)?;
+    load_file(&mpv, source)?;
     let started = Instant::now();
     loop {
         thread::sleep(POLL_INTERVAL);

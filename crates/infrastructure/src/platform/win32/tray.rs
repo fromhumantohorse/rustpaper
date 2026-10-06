@@ -9,6 +9,7 @@ use crate::platform::{platform_error, TrayAction, TrayLabels};
 pub struct SystemTray {
     _icon: TrayIcon,
     open: MenuItem,
+    settings: MenuItem,
     pause: CheckMenuItem,
     mute: CheckMenuItem,
     quit: MenuItem,
@@ -17,12 +18,14 @@ pub struct SystemTray {
 impl SystemTray {
     pub fn create(image: &RgbaImage, labels: &TrayLabels) -> Result<Self, AppError> {
         let open = MenuItem::new(&labels.open, true, None);
+        let settings = MenuItem::new(&labels.settings, true, None);
         let pause = CheckMenuItem::new(&labels.pause, true, false, None);
         let mute = CheckMenuItem::new(&labels.mute, true, false, None);
         let quit = MenuItem::new(&labels.quit, true, None);
         let menu = Menu::new();
         menu.append_items(&[
             &open,
+            &settings,
             &PredefinedMenuItem::separator(),
             &pause,
             &mute,
@@ -42,6 +45,7 @@ impl SystemTray {
         Ok(Self {
             _icon: tray,
             open,
+            settings,
             pause,
             mute,
             quit,
@@ -71,6 +75,7 @@ impl SystemTray {
 
     pub fn relabel(&self, labels: &TrayLabels) {
         self.open.set_text(&labels.open);
+        self.settings.set_text(&labels.settings);
         self.pause.set_text(&labels.pause);
         self.mute.set_text(&labels.mute);
         self.quit.set_text(&labels.quit);
@@ -84,6 +89,9 @@ impl SystemTray {
     fn menu_action(&self, id: &tray_icon::menu::MenuId) -> Option<TrayAction> {
         if id == self.open.id() {
             return Some(TrayAction::OpenStudio);
+        }
+        if id == self.settings.id() {
+            return Some(TrayAction::OpenSettings);
         }
         if id == self.pause.id() {
             return Some(TrayAction::SetPaused(self.pause.is_checked()));

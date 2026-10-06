@@ -37,9 +37,6 @@ impl Localized for MediaFilter {
     fn key(&self) -> Key {
         match self {
             Self::All => Key::NavLibrary,
-            Self::Videos => Key::NavVideos,
-            Self::Audio => Key::NavMusic,
-            Self::Images => Key::NavImages,
             Self::Playlist => Key::NavPlaylist,
         }
     }
@@ -49,9 +46,6 @@ impl UiIcon for MediaFilter {
     fn icon(&self) -> &'static str {
         match self {
             Self::All => icon::SQUARES_FOUR,
-            Self::Videos => icon::FILM_STRIP,
-            Self::Audio => icon::MUSIC_NOTES,
-            Self::Images => icon::IMAGE,
             Self::Playlist => icon::QUEUE,
         }
     }
@@ -84,6 +78,7 @@ impl Localized for PlaybackPolicy {
             Self::KeepRunning => Key::PolicyContinue,
             Self::Mute => Key::PolicyMute,
             Self::Pause => Key::PolicyPause,
+            Self::Stop => Key::PolicyStop,
         }
     }
 }

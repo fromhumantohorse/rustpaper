@@ -24,6 +24,9 @@ pub const WARNING_SOFT: Color32 = Color32::from_rgb(58, 43, 20);
 pub const DANGER: Color32 = Color32::from_rgb(247, 118, 142);
 pub const DANGER_SOFT: Color32 = Color32::from_rgb(60, 24, 36);
 pub const PLAYLIST_TINT: Color32 = WARNING;
+pub const METRIC_RAM: Color32 = Color32::from_rgb(79, 139, 255);
+pub const METRIC_GPU: Color32 = Color32::from_rgb(244, 63, 94);
+pub const METRIC_VRAM: Color32 = Color32::from_rgb(167, 139, 250);
 pub const SCRIM: Color32 = Color32::from_rgba_premultiplied(5, 7, 14, 200);
 pub const ON_ACCENT: Color32 = Color32::WHITE;
 

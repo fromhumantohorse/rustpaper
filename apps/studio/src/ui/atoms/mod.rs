@@ -1,19 +1,21 @@
 mod buttons;
+mod chart;
 mod chip_grid;
+mod glow;
 mod gradient;
 mod pill;
 mod segmented;
 mod slider;
-mod sparkline;
 mod text;
 mod toggle;
 
 pub use buttons::{button, icon_button, ButtonLook};
+pub use chart::{line_chart, ChartSeries};
 pub use chip_grid::chip_grid;
+pub use glow::{ambient_center, paint_glow, paint_soft_shadow};
 pub use gradient::paint_gradient;
 pub use pill::{paint_pill, pill, pill_size, PillStyle};
 pub use segmented::segmented;
 pub use slider::bounded_slider;
-pub use sparkline::sparkline;
 pub use text::{section_label, single_line, TextStyle};
 pub use toggle::toggle;

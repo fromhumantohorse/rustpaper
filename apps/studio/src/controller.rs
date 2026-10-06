@@ -6,7 +6,9 @@ use rustpaper_application::ports::DisplayProvider;
 use rustpaper_application::{AppError, ImportReport, LibraryCommands};
 use rustpaper_domain::display::{Monitor, MonitorId};
 use rustpaper_domain::settings::EngineSettings;
+use rustpaper_domain::values::Volume;
 use rustpaper_domain::wallpaper::WallpaperId;
+use rustpaper_domain::Bounded;
 use rustpaper_domain::{DomainError, Library};
 use rustpaper_i18n::{Key, Language};
 use rustpaper_infrastructure::autostart::set_autostart;
@@ -169,6 +171,10 @@ impl StudioController {
                 is_paused,
                 is_muted,
             } => return self.set_playback(is_paused, is_muted),
+            Intent::SetSound {
+                is_audible,
+                is_paused,
+            } => return self.set_sound(is_audible, is_paused),
             Intent::StartEngine => {
                 self.spawn_daemon()?;
                 self.notify_key(Tone::Success, Key::ToastEngineStarted);
@@ -256,6 +262,26 @@ impl StudioController {
             is_paused,
             is_muted,
         }))
+    }
+
+    fn set_sound(
+        &mut self,
+        is_audible: bool,
+        is_paused: bool,
+    ) -> Result<Option<SideEffect>, AppError> {
+        let mut settings = *self.library().settings();
+        settings.is_muted = !is_audible;
+        if is_audible && settings.master_volume.get() == 0 {
+            settings.master_volume = Volume::default();
+        }
+        self.persist(|library| {
+            library.configure_engine(settings);
+            Ok(())
+        })?;
+        if !is_audible {
+            return Ok(None);
+        }
+        self.set_playback(is_paused, false)
     }
 
     fn import(&mut self, paths: &[PathBuf]) -> Result<(), AppError> {

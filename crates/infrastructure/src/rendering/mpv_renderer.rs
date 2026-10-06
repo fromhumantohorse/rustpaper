@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use libmpv2::Mpv;
 use rustpaper_application::ports::{Presentation, Renderer, RendererFactory, SurfaceHandle};
@@ -12,6 +13,17 @@ use super::mpv_properties::{
 
 pub(super) fn renderer_error(error: libmpv2::Error) -> AppError {
     AppError::Renderer(format!("{error:?}"))
+}
+
+pub(super) fn load_file(mpv: &Mpv, path: &Path) -> Result<(), AppError> {
+    let argument = quoted(&path.to_string_lossy());
+    mpv.command("loadfile", &[&argument, "replace"])
+        .map_err(renderer_error)
+}
+
+fn quoted(argument: &str) -> String {
+    let escaped = argument.replace('\\', r"\\").replace('"', r#"\""#);
+    format!("\"{escaped}\"")
 }
 
 pub struct MpvRendererFactory;
@@ -81,10 +93,7 @@ impl Renderer for MpvRenderer {
                 presentation.wallpaper.title()
             );
         }
-        let path = path.to_string_lossy();
-        self.mpv
-            .command("loadfile", &[path.as_ref(), "replace"])
-            .map_err(renderer_error)
+        load_file(&self.mpv, path)
     }
 
     fn configure(
@@ -121,5 +130,18 @@ impl Renderer for MpvRenderer {
         self.is_occlusion_muted = is_muted;
         let mute = effective_mute(self.is_engine_muted, is_muted);
         self.set("mute", PropertyValue::Flag(mute))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::quoted;
+
+    #[test]
+    fn quotes_paths_with_spaces_backslashes_and_quotes() {
+        assert_eq!(
+            quoted(r#"C:\My Videos\a "b".mp4"#),
+            r#""C:\\My Videos\\a \"b\".mp4""#
+        );
     }
 }

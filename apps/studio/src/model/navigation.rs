@@ -1,5 +1,5 @@
 use rustpaper_domain::display::MonitorId;
-use rustpaper_domain::wallpaper::{MediaKind, Wallpaper};
+use rustpaper_domain::wallpaper::Wallpaper;
 use rustpaper_domain::Library;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -17,27 +17,15 @@ pub enum MonitorTarget {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum MediaFilter {
     All,
-    Videos,
-    Audio,
-    Images,
     Playlist,
 }
 
 impl MediaFilter {
-    pub const ALL: [Self; 5] = [
-        Self::All,
-        Self::Videos,
-        Self::Audio,
-        Self::Images,
-        Self::Playlist,
-    ];
+    pub const ALL: [Self; 2] = [Self::All, Self::Playlist];
 
     pub fn accepts(self, wallpaper: &Wallpaper, library: &Library) -> bool {
         match self {
             Self::All => true,
-            Self::Videos => wallpaper.kind() == MediaKind::Video,
-            Self::Audio => wallpaper.kind() == MediaKind::Audio,
-            Self::Images => wallpaper.kind() == MediaKind::Image,
             Self::Playlist => library.is_in_playlist(wallpaper.id()),
         }
     }
@@ -81,11 +69,14 @@ mod tests {
     }
 
     #[test]
-    fn filters_by_media_kind() {
-        let library = library();
-        let audio = visible_wallpapers(&library, MediaFilter::Audio, "");
-        assert_eq!(audio.len(), 1);
-        assert_eq!(audio[0].title(), "Lofi Beats");
+    fn playlist_filter_only_keeps_listed_wallpapers() {
+        let mut library = library();
+        let listed = library.wallpapers()[1].id();
+        library.toggle_in_playlist(listed).unwrap();
+        let playlist = visible_wallpapers(&library, MediaFilter::Playlist, "");
+        assert_eq!(playlist.len(), 1);
+        assert_eq!(playlist[0].title(), "Lofi Beats");
+        assert_eq!(visible_wallpapers(&library, MediaFilter::All, "").len(), 3);
     }
 
     #[test]

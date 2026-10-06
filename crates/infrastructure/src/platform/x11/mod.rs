@@ -11,5 +11,5 @@ pub use occlusion::X11OcclusionProbe;
 pub use power::SysfsPower;
 pub use session::{
     prepare_process, process_memory_bytes, theme_title_bar, trim_memory, wait_for_events,
-    SystemTray,
+    GpuMonitor, SystemTray,
 };

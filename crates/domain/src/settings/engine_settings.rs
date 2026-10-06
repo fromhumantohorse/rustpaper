@@ -16,6 +16,7 @@ pub struct EngineSettings {
     pub rules: PlaybackRules,
     pub playlist: PlaylistSettings,
     pub is_autostart: bool,
+    pub is_auto_updating: bool,
 }
 
 impl Default for EngineSettings {
@@ -30,6 +31,7 @@ impl Default for EngineSettings {
             rules: PlaybackRules::default(),
             playlist: PlaylistSettings::default(),
             is_autostart: false,
+            is_auto_updating: true,
         }
     }
 }

@@ -10,7 +10,9 @@ use rustpaper_i18n::Key;
 
 use crate::i18n::{display, Translator};
 use crate::model::Intent;
-use crate::ui::atoms::{paint_gradient, paint_pill, pill_size, single_line, PillStyle, TextStyle};
+use crate::ui::atoms::{
+    paint_gradient, paint_pill, paint_soft_shadow, pill_size, single_line, PillStyle, TextStyle,
+};
 use crate::ui::labels::{Localized, UiIcon};
 use crate::ui::theme::fonts::{icon, regular, semibold};
 use crate::ui::theme::palette::{
@@ -22,6 +24,7 @@ use crate::ui::theme::style::{
 };
 
 const INFO_HEIGHT: f32 = 62.0;
+const CARD_SHADOW_OPACITY: f32 = 0.22;
 const PLAY_RADIUS: f32 = 24.0;
 const ACTION_SIZE: f32 = 28.0;
 const SCRIM_ALPHA: f32 = 110.0;
@@ -57,6 +60,15 @@ pub fn wallpaper_card(ui: &mut Ui, card: &Card<'_>) -> Option<Intent> {
         se: 0.0,
     };
 
+    let emphasis = if card.is_selected { 1.0 } else { hover };
+    if emphasis > 0.0 {
+        paint_soft_shadow(
+            ui.painter(),
+            rect,
+            RADIUS_LARGE,
+            ACCENT.gamma_multiply(CARD_SHADOW_OPACITY * emphasis),
+        );
+    }
     ui.painter()
         .rect_filled(rect, RADIUS_LARGE, mix(SURFACE, SURFACE_HOVER, hover * 0.6));
     paint_thumbnail(ui, card, thumb, top);

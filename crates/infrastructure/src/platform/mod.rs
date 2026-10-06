@@ -10,19 +10,27 @@ use rustpaper_i18n::{tr, Key, Language};
 #[cfg(windows)]
 pub use win32::{
     prepare_process, process_memory_bytes, theme_title_bar, trim_memory, wait_for_events,
-    SystemTray, WindowsDesktopSurface as NativeDesktopSurface, WindowsDisplays as NativeDisplays,
-    WindowsOcclusionProbe as NativeOcclusionProbe, WindowsPower as NativePower,
+    GpuMonitor, SystemTray, WindowsDesktopSurface as NativeDesktopSurface,
+    WindowsDisplays as NativeDisplays, WindowsOcclusionProbe as NativeOcclusionProbe,
+    WindowsPower as NativePower,
 };
 #[cfg(target_os = "linux")]
 pub use x11::{
     prepare_process, process_memory_bytes, theme_title_bar, trim_memory, wait_for_events,
-    SysfsPower as NativePower, SystemTray, X11DesktopSurface as NativeDesktopSurface,
+    GpuMonitor, SysfsPower as NativePower, SystemTray, X11DesktopSurface as NativeDesktopSurface,
     X11Displays as NativeDisplays, X11OcclusionProbe as NativeOcclusionProbe,
 };
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct GpuUsage {
+    pub percent: f32,
+    pub dedicated_bytes: u64,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrayLabels {
     pub open: String,
+    pub settings: String,
     pub pause: String,
     pub mute: String,
     pub quit: String,
@@ -32,6 +40,7 @@ impl TrayLabels {
     pub fn for_language(language: Language) -> Self {
         Self {
             open: tr(language, Key::TrayOpen).to_owned(),
+            settings: tr(language, Key::TraySettings).to_owned(),
             pause: tr(language, Key::TrayPause).to_owned(),
             mute: tr(language, Key::TrayMute).to_owned(),
             quit: tr(language, Key::TrayQuit).to_owned(),
@@ -42,6 +51,7 @@ impl TrayLabels {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TrayAction {
     OpenStudio,
+    OpenSettings,
     SetPaused(bool),
     SetMuted(bool),
     Quit,
