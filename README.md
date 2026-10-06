@@ -44,9 +44,10 @@ Turn any video, song or image into your desktop wallpaper — on Windows 10/11 a
 
 ### Windows 10 / 11
 
-1. Download `Rustpaper-<version>-windows-x64.zip` from the [latest release](https://github.com/fromhumantohorse/rustpaper/releases/latest).
-2. Extract it anywhere (keep the three files together).
-3. Run **`rustpaper-studio.exe`** — the engine starts automatically.
+**Installer (recommended):** download `Rustpaper-<version>-windows-x64.msi` from the [latest release](https://github.com/fromhumantohorse/rustpaper/releases/latest) and run it.
+It installs to `Program Files`, adds **Desktop** and **Start menu** shortcuts, and upgrades previous versions in place. Uninstall from *Settings → Apps*.
+
+**Portable:** download `Rustpaper-<version>-windows-x64.zip`, extract it anywhere (keep the files together) and run **`rustpaper-studio.exe`** — the engine starts automatically.
 
 ### Linux (X11)
 
@@ -98,7 +99,8 @@ Cross-compiling for Windows from Linux (with the `mpv-dev-x86_64` package from
 RUSTFLAGS='-L .cache/mpv' cargo build --release --target x86_64-pc-windows-gnu
 ```
 
-Place `rustpaper-studio.exe`, `rustpaper-daemon.exe` and `libmpv-2.dll` in the same folder.
+Place `rustpaper-studio.exe`, `rustpaper-daemon.exe` and `libmpv-2.dll` in the same folder,
+or run `sh scripts/package-windows.sh` to produce the portable `.zip` and the `.msi` installer (requires `msitools`).
 
 Logs live in `%LOCALAPPDATA%\Rustpaper\Rustpaper\cache\logs` (Windows) or `~/.cache/rustpaper/logs` (Linux).
 

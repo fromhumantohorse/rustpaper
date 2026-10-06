@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.1
+
+- Windows installer (`.msi`): installs to Program Files with Desktop and Start menu shortcuts, in-place upgrades and clean uninstall.
+- Reproducible packaging script (`scripts/package-windows.sh`) producing the portable zip, the installer and SHA-256 checksums.
+
 ## v0.2.0
 
 - Brand-new Studio design: sidebar navigation, live "Now playing" card with engine memory graph, thumbnail grid, side inspector, toast notifications.

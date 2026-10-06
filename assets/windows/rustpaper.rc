@@ -1,8 +1,8 @@
 1 ICON "../icon.ico"
 
 1 VERSIONINFO
-FILEVERSION 0,2,0,0
-PRODUCTVERSION 0,2,0,0
+FILEVERSION 0,2,1,0
+PRODUCTVERSION 0,2,1,0
 BEGIN
   BLOCK "StringFileInfo"
   BEGIN
@@ -11,7 +11,7 @@ BEGIN
       VALUE "CompanyName", "Rustpaper contributors"
       VALUE "FileDescription", "Rustpaper - fonds d'écran animés"
       VALUE "ProductName", "Rustpaper"
-      VALUE "ProductVersion", "0.2.0"
+      VALUE "ProductVersion", "0.2.1"
       VALUE "LegalCopyright", "MIT"
     END
   END

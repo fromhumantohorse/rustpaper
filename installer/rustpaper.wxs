@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Rustpaper" Language="1033" Version="$(var.Version)"
+           Manufacturer="Rustpaper contributors" UpgradeCode="6B1E4C2A-9F3D-4E7A-8C51-2D7F0A9B3E64">
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine"
+             Description="Rustpaper - animated wallpaper engine" Manufacturer="Rustpaper contributors" />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Rustpaper is already installed." />
+    <Media Id="1" Cabinet="rustpaper.cab" EmbedCab="yes" />
+
+    <Icon Id="RustpaperIcon" SourceFile="assets/icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RustpaperIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/fromhumantohorse/rustpaper" />
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLDIR" Name="Rustpaper" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder" />
+      <Directory Id="DesktopFolder" />
+    </Directory>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="StudioExecutable" Guid="A3C2F1E0-5B4D-4C6A-9E8F-1D2C3B4A5F60" Win64="yes">
+        <File Id="StudioExe" Source="dist/rustpaper-studio.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="DaemonExecutable" Guid="B4D3E2F1-6C5E-4D7B-8F90-2E3D4C5B6A71" Win64="yes">
+        <File Id="DaemonExe" Source="dist/rustpaper-daemon.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="MpvLibrary" Guid="C5E4F3A2-7D6F-4E8C-9A01-3F4E5D6C7B82" Win64="yes">
+        <File Id="LibMpv" Source="dist/libmpv-2.dll" KeyPath="yes" />
+      </Component>
+      <Component Id="Documents" Guid="D6F5A4B3-8E7A-4F9D-8B12-4A5F6E7D8C93" Win64="yes">
+        <File Id="License" Source="LICENSE" Name="LICENSE.txt" KeyPath="yes" />
+        <File Id="Notices" Source="THIRD_PARTY_NOTICES.md" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="E7A6B5C4-9F8B-4A0E-9C23-5B6A7F8E9DA4">
+        <Shortcut Id="StartMenuStudio" Name="Rustpaper" Description="Animated wallpaper engine"
+                  Target="[INSTALLDIR]rustpaper-studio.exe" WorkingDirectory="INSTALLDIR" Icon="RustpaperIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Rustpaper" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="F8B7C6D5-A09C-4B1F-8D34-6C7B8A9FAEB5">
+        <Shortcut Id="DesktopStudio" Name="Rustpaper" Description="Animated wallpaper engine"
+                  Target="[INSTALLDIR]rustpaper-studio.exe" WorkingDirectory="INSTALLDIR" Icon="RustpaperIcon" />
+        <RegistryValue Root="HKCU" Key="Software\Rustpaper" Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="Main" Title="Rustpaper" Level="1">
+      <ComponentRef Id="StudioExecutable" />
+      <ComponentRef Id="DaemonExecutable" />
+      <ComponentRef Id="MpvLibrary" />
+      <ComponentRef Id="Documents" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+  </Product>
+</Wix>
